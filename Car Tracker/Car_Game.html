@@ -81,7 +81,7 @@
   let xVelocity = 0;
   let yVelocity = 0;
   let paused = true;
-  let speed = 200/7;
+  let speed = 150/7;
   let enemyY = 0;
   let enemyX = 3.5;
   let i=0;
@@ -106,16 +106,23 @@
   changeCarPosition();
   checkPrizeCollision();
   drawRoad();
-  drawRoadLine();
+
   if(started == true){
     drawPrize();
     drawEnemies();
   }
   drawCar();
   drawTimeline();
-  if(timeLine>1000 && timeLine % 1000 == 0)
+  if(timeLine>10 && timeLine % 10 == 0)
   {
-    speed-=5;
+    speed-=.1;
+  }
+  if(timeLine == 30)
+  {
+    ctx.fillStyle="red";
+    ctx.font = "40px Verdana";
+    ctx.fillText("HAHAHAHHAAH", (canvas.width/2)-170, canvas.height/2);
+    speed-=.2;
   }
   drawScore();
   togglePause(paused);
@@ -201,28 +208,65 @@ function togglePause()
 }
 
   function clearScreen(){
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
   ctx.fillRect(0,0, canvas.width, canvas.height);
   }
 
-  function drawRoad(){
+
+  function drawRoad() {
+    // Grass background
     ctx.fillStyle = "#0b8457";
-    ctx.fillRect(0,0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Road
     ctx.fillStyle = "#7d7d7d";
-    ctx.fillRect(75,0, 400, canvas.height);  
-  }
+    ctx.fillRect(75, 0, 400, canvas.height);
 
-  function drawCar(){
-    ctx.fillStyle = "#1cb3c8";
-    ctx.fillRect(posX * tileCount, posY * tileCount, tileSize*2, tileSize*4);
-   
+    // Road borders (yellow lines)
+    ctx.fillStyle = "#ffcc00";
+    ctx.fillRect(75, 0, 5, canvas.height); // Left border
+    ctx.fillRect(470, 0, 5, canvas.height); // Right border
+
+    // Center dashed line
     ctx.fillStyle = "white";
-    ctx.fillRect(posX * tileCount, posY * tileCount, tileSize*2, tileSize*2);
-  
+    const dashHeight = 40;
+    const dashGap = 30;
+    for (let y = 0; y < canvas.height; y += dashHeight + dashGap) {
+        ctx.fillRect(270, y, 10, dashHeight);
+    }
+}
+
+
+
+  function drawCar() {
+    const baseX = posX * tileCount;
+    const baseY = posY * tileCount;
+
+    // ==== Car Body ====
+    ctx.fillStyle = "#1cb3c8"; // main color
+    ctx.fillRect(baseX, baseY, tileSize * 2, tileSize * 4);
+
+    // ==== Cabin ====
+    ctx.fillStyle = "white"; 
+    ctx.fillRect(baseX, baseY + tileSize, tileSize * 2, tileSize * 2);
+
+    // ==== Windshield ====
     ctx.fillStyle = "rgb(123, 177, 248)";
-    ctx.fillRect(posX * tileCount+5, posY * tileCount+2, tileSize*1.5, tileSize);
-  }
+    ctx.fillRect(baseX + 4, baseY + 2, tileSize * 2 - 8, tileSize);
+
+    // ==== Wheels ====
+    ctx.fillStyle = "black";
+    // front wheels
+    ctx.fillRect(baseX - 4, baseY + 4, 4, tileSize); // left front
+    ctx.fillRect(baseX + tileSize * 2, baseY + 4, 4, tileSize); // right front
+    // rear wheels
+    ctx.fillRect(baseX - 4, baseY + tileSize * 4 - tileSize - 4, 4, tileSize); // left rear
+    ctx.fillRect(baseX + tileSize * 2, baseY + tileSize * 4 - tileSize - 4, 4, tileSize); // right rear
+
+    // ==== Highlight Stripe (optional) ====
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(baseX + tileSize - 1, baseY, 2, tileSize * 4);
+}
 
   function drawEnemies(){
     carPart1[0] = enemyY-50*30;
@@ -257,30 +301,118 @@ function togglePause()
 
     enemyY+=10;
 
-  } 
+  } // Predefined set of colors for variety
+const enemyColors = [
+    "#8f1d14", // dark red
+    "#1d8f2a", // green
+    "#1d3d8f", // blue
+    "#8f1d7d", // purple
+    "#8f6f1d", // gold/brown
+    "#000000"  // black
+];
 
+// Store a fixed color for each enemy (same index as carPart arrays)
+let enemyCarColors = Array(6).fill(null).map(() => 
+    enemyColors[Math.floor(Math.random() * enemyColors.length)]
+);
 
-  function drawOneEnemy(x,carPart1,carPart2,carPart3){
+function drawEnemies() {
+    // Enemy 0
+    carPart1[0] = enemyY - 50 * 30;
+    carPart2[0] = enemyY - 50 * 30;
+    carPart3[0] = 7 + enemyY - 50 * 30;
+    drawOneEnemyColored(2, carPart1[0], carPart2[0], carPart3[0], enemyCarColors[0]);
 
-    ctx.fillStyle = "#8f1d14";
-    ctx.fillRect(enemyX * tileCount+(x*tileCount), carPart1, tileSize*2, tileSize*4);
-   
+    // Enemy 1
+    carPart1[1] = enemyY - 30 * 30;
+    carPart2[1] = enemyY - 30 * 30;
+    carPart3[1] = 7 + enemyY - 30 * 30;
+    drawOneEnemyColored(4, carPart1[1], carPart2[1], carPart3[1], enemyCarColors[1]);
+
+    // Enemy 2
+    carPart1[2] = enemyY - 20 * 10;
+    carPart2[2] = enemyY - 20 * 10;
+    carPart3[2] = 7 + enemyY - 20 * 10;
+    drawOneEnemyColored(6, carPart1[2], carPart2[2], carPart3[2], enemyCarColors[2]);
+
+    // Enemy 3
+    carPart1[3] = enemyY - 10 * 60;
+    carPart2[3] = enemyY - 10 * 60;
+    carPart3[3] = 7 + enemyY - 10 * 60;
+    drawOneEnemyColored(10, carPart1[3], carPart2[3], carPart3[3], enemyCarColors[3]);
+
+    // Enemy 4
+    carPart1[4] = enemyY - 10 * 50;
+    carPart2[4] = enemyY - 10 * 50;
+    carPart3[4] = 7 + enemyY - 10 * 50;
+    drawOneEnemyColored(3.5, carPart1[4], carPart2[4], carPart3[4], enemyCarColors[4]);
+
+    // Enemy 5
+    carPart1[5] = enemyY - 50 * 25;
+    carPart2[5] = enemyY - 50 * 25;
+    carPart3[5] = 7 + enemyY - 50 * 25;
+    drawOneEnemyColored(0, carPart1[5], carPart2[5], carPart3[5], enemyCarColors[5]);
+
+    // Move all enemies
+    enemyY += 10;
+}
+
+function drawOneEnemyColored(x, carPart1, carPart2, carPart3, bodyColor) {
+    const baseX = enemyX * tileCount + (x * tileCount);
+
+    // ==== Car Body ====
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(baseX, carPart1, tileSize * 2, tileSize * 4);
+
+    // ==== Cabin ====
     ctx.fillStyle = "black";
-    ctx.fillRect(enemyX * tileCount+(x*tileCount), carPart2, tileSize*2, tileSize*2);
-  
+    ctx.fillRect(baseX, carPart2, tileSize * 2, tileSize * 2);
+
+    // ==== Windshield ====
     ctx.fillStyle = "#913535";
-    ctx.fillRect(enemyX * tileCount+(x*tileCount)+5, carPart3, tileSize*1.5, tileSize);
+    ctx.fillRect(baseX + 4, carPart3, tileSize * 2 - 8, tileSize);
 
-  }
+    // ==== Wheels ====
+    ctx.fillStyle = "black";
+    ctx.fillRect(baseX - 4, carPart1 + 4, 4, tileSize);
+    ctx.fillRect(baseX + tileSize * 2, carPart1 + 4, 4, tileSize);
+    ctx.fillRect(baseX - 4, carPart1 + tileSize * 4 - tileSize - 4, 4, tileSize);
+    ctx.fillRect(baseX + tileSize * 2, carPart1 + tileSize * 4 - tileSize - 4, 4, tileSize);
 
-  function drawTimeline(){
-    ctx.fillStyle="#913535";
+    // ==== Racing Stripe ====
+    ctx.fillStyle = "#ffcc00";
+    ctx.fillRect(baseX + tileSize - 2, carPart1, 4, tileSize * 4);
+}
+
+function drawTimeline() {
+    // Format timeLine into minutes and seconds with leading zeros
+    const minutes = Math.floor(timeLine / 60);
+    const seconds = timeLine % 60;
+    const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    ctx.fillStyle = "#913535";
     ctx.font = "20px Verdana";
-    ctx.fillText("Time " + timeLine+ "s", 10, 20);
-    if(started == true){
-        timeLine++;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+    ctx.shadowBlur = 2;
+    ctx.textAlign = "left";
+
+    ctx.fillText("Time " + formattedTime, 10, 25);
+
+    // Increment timeLine once per second if game started
+    // (assuming drawTimeline is called more than once per second)
+    if (started) {
+        // Use a timer variable outside to control incrementation rate
+        if (!drawTimeline.lastUpdate) drawTimeline.lastUpdate = Date.now();
+        const now = Date.now();
+        if (now - drawTimeline.lastUpdate >= 1000) {
+            timeLine++;
+            drawTimeline.lastUpdate = now;
+        }
     }
 }
+
 
   function drawRoadLine(){
     ctx.fillStyle = "white";
@@ -297,17 +429,97 @@ function togglePause()
 
   drawRoadLine();
 
-  function drawScore(){
-    ctx.fillStyle="#f89d13";
-    ctx.font = "20px Verdana";
-    ctx.fillText("Score " + prize, canvas.width-150, 20);
+  const minutes = Math.floor(timeLine / 60);
+  const seconds = timeLine % 60;
+  const timeText = `${minutes}m ${seconds}s`;
+
+
+  function drawScore() {
+    ctx.fillStyle = "#f89d13";
+    ctx.font = "bold 22px Verdana";
+    ctx.shadowColor = "rgba(0,0,0,0.4)";
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.shadowBlur = 3;
+
+    ctx.textAlign = "left";  // Fix alignment to left
+
+    const text = "Score: " + prize;
+    const x = canvas.width - 160;
+    const y = 30;
+
+    ctx.fillText(text, x, y);
+
+    // Draw a small star icon to the left of the text
+    const starX = x - 30;
+    const starY = y - 12;
+    ctx.fillStyle = "#ffd700";
+    ctx.beginPath();
+    const spikes = 5;
+    const outerRadius = 10;
+    const innerRadius = 5;
+    let rot = Math.PI / 2 * 3;
+    let step = Math.PI / spikes;
+    ctx.moveTo(starX, starY - outerRadius);
+    for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(starX + Math.cos(rot) * outerRadius, starY + Math.sin(rot) * outerRadius);
+        rot += step;
+        ctx.lineTo(starX + Math.cos(rot) * innerRadius, starY + Math.sin(rot) * innerRadius);
+        rot += step;
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Reset shadow and alignment so it doesn't affect other drawings
+    ctx.shadowColor = "transparent";
+    ctx.textAlign = "start";
 }
 
-  function drawPrize(){
-    ctx.fillStyle = "#f89d13";
-    ctx.fillRect(prizeX * tileCount, prizeY, tileSize, tileSize);
-    prizeY+=10;
-  }
+
+function drawPrize() {
+    const x = prizeX * tileCount;
+    const y = prizeY;
+    const size = tileSize;
+
+    // ==== Glow ====
+    const glow = ctx.createRadialGradient(x + size / 2, y + size / 2, size * 0.2, x + size / 2, y + size / 2, size * 0.8);
+    glow.addColorStop(0, "#ffd27f");
+    glow.addColorStop(1, "#f89d13");
+
+    // ==== Main Shape ====
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.roundRect(x, y, size, size, 6);
+    ctx.fill();
+
+    // ==== Border ====
+    ctx.strokeStyle = "#ffeb99";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // ==== Star Icon ====
+    ctx.fillStyle = "#fff4d1";
+    ctx.beginPath();
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    const spikes = 5;
+    const outerRadius = size / 3;
+    const innerRadius = size / 6;
+    let rot = Math.PI / 2 * 3;
+    let step = Math.PI / spikes;
+    ctx.moveTo(cx, cy - outerRadius);
+    for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+        rot += step;
+        ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
+        rot += step;
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // ==== Movement ====
+    prizeY += 10;
+}
 
 
     function changeCarPosition(){
@@ -435,31 +647,60 @@ function gameOver(){
 
 }
 
-      function youDied(){    
- // if(gameOver())
-  {
-             speed = 200/7;
-             el = document.querySelector('#rPlay');
-             el.classList.toggle('hidden');
-             el = document.querySelector('#btnR');
-             el.classList.toggle('hidden');
-             paused = true;
+function youDied() {
+    speed = 150 / 7;
+    const elPlay = document.querySelector('#rPlay');
+    const elBtnR = document.querySelector('#btnR');
+    elPlay.classList.toggle('hidden');
+    elBtnR.classList.toggle('hidden');
+    paused = true;
+
     clearScreen();
-    drawRoadLine();
-    ctx.fillStyle="red";
-    ctx.font = "50px Verdana";
-    ctx.fillText("YOU DIED! ", (canvas.width/2)-170, canvas.height/2);
-    ctx.fillStyle="darkgreen";
-    ctx.font = "25px Verdana";
-    ctx.fillText("Score: " + prize, (canvas.width/2)-180, canvas.height/2+40);
-    ctx.fillText("Time elappsed: " + timeLine + "s", (canvas.width/2)-180, canvas.height/2+80);
+
+    // Dark semi-transparent overlay
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // YOU DIED! text with shadow & glow
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    ctx.textAlign = "center";
+
+    // Animate pulse (scale up/down)
+    const pulse = 1 + 0.05 * Math.sin(Date.now() / 200);
+    ctx.save();
+    ctx.translate(centerX, centerY - 30);
+    ctx.scale(pulse, pulse);
+
+    ctx.fillStyle = "red";
+    ctx.shadowColor = "rgba(255, 0, 0, 0.7)";
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.font = "bold 60px Verdana";
+    ctx.fillText("YOU DIED!", 0, 0);
+    ctx.restore();
+
+    // Format time as minutes and seconds
+    const minutes = Math.floor(timeLine / 60);
+    const seconds = timeLine % 60;
+    const timeText = `${minutes}m ${seconds}s`;
+
+    // Score and time info
+    ctx.fillStyle = "limegreen";
+    ctx.shadowColor = "rgba(0, 128, 0, 0.5)";
+    ctx.shadowBlur = 10;
+    ctx.font = "28px Verdana";
+    ctx.fillText("Score: " + prize, centerX, centerY + 40);
+    ctx.fillText("Time elapsed: " + timeText, centerX, centerY + 80);
+
+    // Reset game values
     prize = 0;
     timeLine = 0;
     started = false;
-    enemyX = enemyY = 0;
-   // clearTimeout(game);
-  // freeze();
-  }
+    enemyX = 0;
+    enemyY = 0;
 }
 
 function checkPrizeCollision(){
